@@ -1,0 +1,11 @@
+claim_id,reason
+CLM101,Missing identity proof
+CLM102,Policy expired
+CLM103,Incomplete medical documents
+CLM104,Fraud suspicion
+CLM105,Duplicate claim submission
+CLM106,Incorrect patient details
+CLM107,Missing hospital invoice
+CLM108,Expired insurance coverage
+CLM109,Unapproved treatment
+CLM110,Incomplete diagnostic reports
