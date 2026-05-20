@@ -1,0 +1,8 @@
+[2026-05-20 17:00:14] Claim CLM104 processed | Action: Escalated to Fraud Investigation Team
+[2026-05-20 17:00:54] Claim CLM104 processed | Action: Escalated to Fraud Investigation Team
+[2026-05-20 23:17:46] Claim CLM104 processed | Category: Fraud Risk | Action: Escalate to Fraud Investigation Team | Human review: True
+[2026-05-20 23:17:46] Claim CLM106 processed | Category: Prior Authorization Missing | Action: Request Prior Authorization Evidence | Human review: False
+[2026-05-20 23:17:46] Claim CLM111 processed | Category: Provider Network Issue | Action: Verify Network Exception Eligibility | Human review: True
+[2026-05-20 23:19:38] Claim CLM111 processed | Category: Provider Network Issue | Action: Verify Network Exception Eligibility | Human review: True
+[2026-05-20 23:19:40] Claim CLM108 processed | Category: Coding Or Billing Error | Action: Request Corrected Claim | Human review: False
+[2026-05-20 23:40:23] Claim CLM104 processed | Category: Fraud Risk | Action: Escalate to Fraud Investigation Team | Human review: True

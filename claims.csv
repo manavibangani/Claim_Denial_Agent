@@ -1,11 +1,14 @@
-claim_id,reason
-CLM101,Missing identity proof
-CLM102,Policy expired
-CLM103,Incomplete medical documents
-CLM104,Fraud suspicion
-CLM105,Duplicate claim submission
-CLM106,Incorrect patient details
-CLM107,Missing hospital invoice
-CLM108,Expired insurance coverage
-CLM109,Unapproved treatment
-CLM110,Incomplete diagnostic reports
+claim_id,patient_name,claim_amount,policy_type,reason
+CLM101,John Doe,5000,Health Plus,Missing identity proof
+CLM102,Sarah Smith,12000,Premium Care,Policy expired
+CLM103,Rahul Verma,8000,Family Shield,Incomplete medical documents
+CLM104,Aman Gupta,45000,Premium Care,Fraud suspicion
+CLM105,Priya Mehta,3000,Health Basic,Duplicate claim submission
+CLM106,Neha Sharma,18000,Premium Care,Prior authorization missing
+CLM107,Vikram Rao,9000,Health Plus,Procedure not medically necessary
+CLM108,Anita Das,6500,Family Shield,Incorrect diagnosis code
+CLM109,Karan Malhotra,11000,Health Basic,Coordination of benefits required
+CLM110,Meera Iyer,4000,Health Plus,Claim submitted after timely filing limit
+CLM111,Rohan Kapoor,22000,Premium Care,Out of network provider
+CLM112,Sana Khan,7000,Family Shield,Benefit limit exhausted
+CLM113,Dev Patel,5500,Health Basic,Date of birth mismatch

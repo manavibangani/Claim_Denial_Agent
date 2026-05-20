@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Claim Agent</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+
+        <h1>AI Insurance Claim Agent</h1>
+
+        <div class="input-section">
+
+            <input
+                type="text"
+                id="claimId"
+                placeholder="Enter Claim ID"
+            >
+
+            <button onclick="analyzeClaim()">
+                Analyze Claim
+            </button>
+
+        </div>
+
+        <div class="status-bar" id="statusBar">
+            Ready for claim analysis
+        </div>
+
+        <div class="result-card" id="resultCard">
+
+            <h2>Claim Analysis</h2>
+
+            <div class="summary-grid">
+
+                <p><strong>Patient Name:</strong> <span id="patientName"></span></p>
+
+                <p><strong>Claim Amount:</strong> <span id="claimAmount"></span></p>
+
+                <p><strong>Policy Type:</strong> <span id="policyType"></span></p>
+
+                <p><strong>Processed At:</strong> <span id="processedAt"></span></p>
+
+            </div>
+
+            <p><strong>Denial Reason:</strong> <span id="denialReason"></span></p>
+
+            <div class="decision-grid">
+
+                <div>
+                    <span class="label">Decision Category</span>
+                    <strong id="decisionCategory">N/A</strong>
+                </div>
+
+                <div>
+                    <span class="label">Priority Level</span>
+                    <strong id="priorityLevel">N/A</strong>
+                </div>
+
+                <div>
+                    <span class="label">Automation Confidence</span>
+                    <strong id="automationConfidence">N/A</strong>
+                </div>
+
+                <div>
+                    <span class="label">Human Review</span>
+                    <strong id="humanIntervention">N/A</strong>
+                </div>
+
+            </div>
+
+            <p><strong>Workflow Action:</strong> <span id="workflowAction"></span></p>
+
+            <p><strong>Next Step:</strong> <span id="nextStep"></span></p>
+
+            <p><strong>Agent Action Status:</strong> <span id="agentActionStatus"></span></p>
+
+            <p><strong>Escalation Queue:</strong> <span id="escalationQueue"></span></p>
+
+            <p><strong>Risk Flags:</strong> <span id="riskFlags"></span></p>
+
+            <p><strong>Complexity Reasons:</strong> <span id="complexityReasons"></span></p>
+
+            <p><strong>AI Analysis:</strong></p>
+
+            <pre id="analysis"></pre>
+
+            <p><strong>Agent Action Result:</strong></p>
+
+            <pre id="agentAction"></pre>
+
+        </div>
+
+    </div>
+
+    <script src="scripts.js"></script>
+
+</body>
+</html>

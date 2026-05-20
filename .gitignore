@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+agent_logs.txt
+.vscode/
+.env

@@ -1,54 +1,53 @@
-import requests
 import csv
 
-# Load claims data from CSV
-claims = {}
+from claim_agent import analyze_claim_record
 
-with open("claims.csv", mode="r") as file:
-    reader = csv.DictReader(file)
 
-    for row in reader:
-        claims[row["claim_id"]] = row["reason"]
+def load_claims():
+    claims = {}
 
-# Ask user for claim ID
-claim_id = input("Enter Claim ID: ")
+    with open("claims.csv", mode="r", newline="") as file:
+        reader = csv.DictReader(file)
 
-# Retrieve denial reason
-claim_reason = claims.get(claim_id)
+        for row in reader:
+            claims[row["claim_id"].upper()] = row
 
-# Handle invalid claim ID
-if not claim_reason:
+    return claims
+
+
+claims = load_claims()
+claim_id = input("Enter Claim ID: ").strip().upper()
+claim = claims.get(claim_id)
+
+if not claim:
     print("Claim ID not found")
     exit()
 
-# Create prompt for AI
-prompt = f"""
-A health insurance claim was denied.
+decision = analyze_claim_record(claim)
+action_result = decision["agent_action_result"]
 
-Denial reason:
-{claim_reason}
+print("\nAI Claim Denial Agent Analysis\n")
+print(f"Claim ID: {claim['claim_id']}")
+print(f"Patient Name: {claim['patient_name']}")
+print(f"Claim Amount: {claim['claim_amount']}")
+print(f"Policy Type: {claim['policy_type']}")
+print(f"Denial Reason: {claim['reason']}")
+print(f"Decision Category: {decision['decision_category']}")
+print(f"Priority Level: {decision['priority_level']}")
+print(f"Automation Type: {decision['automation_type']}")
+print(f"Automation Confidence: {round(decision['automation_confidence'] * 100)}%")
+print(f"Suggested Action: {decision['suggested_action']}")
+print(f"Next Step: {decision['next_step']}")
+print(f"Human Intervention Required: {decision['human_intervention_required']}")
+print(f"Agent Action Status: {action_result['status']}")
+print(f"Agent Action Result: {action_result['message']}")
 
-Return:
-1. Decision Category
-2. Priority Level
-3. Suggested Next Action
+if decision["risk_flags"]:
+    print("Risk Flags:")
+    for flag in decision["risk_flags"]:
+        print(f"- {flag}")
 
-Keep response short and structured.
-"""
-
-# Send request to Ollama
-response = requests.post(
-    "http://localhost:11434/api/generate",
-    json={
-        "model": "llama3",
-        "prompt": prompt,
-        "stream": False
-    }
-)
-
-# Convert response
-result = response.json()
-
-# Print AI response
-print("\nAI Suggestion:\n")
-print(result["response"])
+if decision["complexity_reasons"]:
+    print("Complexity Reasons:")
+    for reason in decision["complexity_reasons"]:
+        print(f"- {reason}")
