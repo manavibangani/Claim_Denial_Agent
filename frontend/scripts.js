@@ -35,13 +35,11 @@ async function analyzeClaim() {
         setText("processedAt", data.processed_at);
         setText("denialReason", data.denial_reason);
         setText("decisionCategory", data.decision_category);
+        setText("carcCode", data.carc_code);
+        setText("carcDescription", data.carc_description);
         setText("priorityLevel", data.priority_level);
-        setText(
-            "automationConfidence",
-            `${Math.round((data.automation_confidence || 0) * 100)}%`
-        );
-        setText("workflowAction", data.workflow_action);
-        setText("nextStep", data.next_step);
+        setText("toolUsed", data.tool_used);
+        setText("llmReasoning", data.llm_reasoning);
         setText("agentActionStatus", data.agent_action_status);
         setText("escalationQueue", data.escalation_queue || "None");
         setText(
@@ -52,6 +50,14 @@ async function analyzeClaim() {
         setText("complexityReasons", formatList(data.complexity_reasons));
         setText("analysis", data.ai_analysis, "No analysis available");
         setText("agentAction", data.agent_action_result);
+
+        const appealSection = document.getElementById("appealLetterSection");
+        if (data.appeal_letter) {
+            setText("appealLetter", data.appeal_letter);
+            appealSection.style.display = "block";
+        } else {
+            appealSection.style.display = "none";
+        }
 
         statusBar.innerText = data.human_intervention_required
             ? "Complex case routed for human intervention"

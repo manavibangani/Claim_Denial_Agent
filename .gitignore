@@ -4,3 +4,5 @@ __pycache__/
 agent_logs.txt
 .vscode/
 .env
+appeals/
+.pytest_cache/

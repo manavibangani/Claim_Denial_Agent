@@ -57,13 +57,13 @@
                 </div>
 
                 <div>
-                    <span class="label">Priority Level</span>
-                    <strong id="priorityLevel">N/A</strong>
+                    <span class="label">CARC Code</span>
+                    <strong id="carcCode">N/A</strong>
                 </div>
 
                 <div>
-                    <span class="label">Automation Confidence</span>
-                    <strong id="automationConfidence">N/A</strong>
+                    <span class="label">Priority Level</span>
+                    <strong id="priorityLevel">N/A</strong>
                 </div>
 
                 <div>
@@ -73,9 +73,11 @@
 
             </div>
 
-            <p><strong>Workflow Action:</strong> <span id="workflowAction"></span></p>
+            <p><strong>CARC Description:</strong> <span id="carcDescription"></span></p>
 
-            <p><strong>Next Step:</strong> <span id="nextStep"></span></p>
+            <p><strong>Tool Selected By Agent:</strong> <span id="toolUsed"></span></p>
+
+            <p><strong>LLM Reasoning:</strong> <span id="llmReasoning"></span></p>
 
             <p><strong>Agent Action Status:</strong> <span id="agentActionStatus"></span></p>
 
@@ -92,6 +94,11 @@
             <p><strong>Agent Action Result:</strong></p>
 
             <pre id="agentAction"></pre>
+
+            <div id="appealLetterSection" style="display:none;">
+                <p><strong>Draft Appeal Letter:</strong></p>
+                <pre id="appealLetter"></pre>
+            </div>
 
         </div>
 

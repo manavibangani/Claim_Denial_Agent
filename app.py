@@ -1,4 +1,3 @@
-import csv
 from datetime import datetime
 from pathlib import Path
 
@@ -6,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from claim_agent import analyze_claim_record, supported_categories
-
+from claim_store import ClaimLoadError, load_claims
 
 app = FastAPI(title="AI Claim Denial Agent")
 
@@ -18,20 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-CLAIMS_FILE = Path("claims.csv")
-LOG_FILE = Path("agent_logs.txt")
-
-
-def load_claims():
-    claims = {}
-
-    with CLAIMS_FILE.open(mode="r", newline="") as file:
-        reader = csv.DictReader(file)
-
-        for row in reader:
-            claims[row["claim_id"].upper()] = row
-
-    return claims
+LOG_FILE = Path(__file__).resolve().parent / "agent_logs.txt"
 
 
 def log_action(message):
@@ -52,7 +38,10 @@ def home():
 
 @app.get("/claims")
 def list_claims():
-    claims = load_claims()
+    try:
+        claims = load_claims()
+    except ClaimLoadError as exc:
+        return {"error": str(exc)}
 
     return {
         "count": len(claims),
@@ -75,16 +64,21 @@ def capabilities():
 
 @app.get("/analyze-claim/{claim_id}")
 def analyze_claim(claim_id: str):
-    claims = load_claims()
+    if not claim_id or not claim_id.strip():
+        return {"error": "Claim ID must not be empty."}
+
+    try:
+        claims = load_claims()
+    except ClaimLoadError as exc:
+        return {"error": str(exc)}
+
     normalized_claim_id = claim_id.strip().upper()
     claim = claims.get(normalized_claim_id)
 
     if not claim:
-        return {
-            "error": "Claim ID not found"
-        }
+        return {"error": "Claim ID not found"}
 
-    decision = analyze_claim_record(claim)
+    decision = analyze_claim_record(claim, all_claims=claims)
     action_result = decision["agent_action_result"]
 
     log_action(
@@ -92,7 +86,8 @@ def analyze_claim(claim_id: str):
             [
                 f"Claim {normalized_claim_id} processed",
                 f"Category: {decision['decision_category']}",
-                f"Action: {decision['suggested_action']}",
+                f"CARC: {decision['carc_code']}",
+                f"Tool: {decision['tool_used']}",
                 f"Human review: {decision['human_intervention_required']}",
             ]
         )
@@ -105,18 +100,18 @@ def analyze_claim(claim_id: str):
         "policy_type": claim["policy_type"],
         "denial_reason": claim["reason"],
         "decision_category": decision["decision_category"],
+        "carc_code": decision["carc_code"],
+        "carc_description": decision["carc_description"],
         "priority_level": decision["priority_level"],
-        "automation_type": decision["automation_type"],
-        "automation_confidence": decision["automation_confidence"],
-        "matched_keywords": decision["matched_keywords"],
+        "tool_used": decision["tool_used"],
+        "llm_reasoning": decision["llm_reasoning"],
         "risk_flags": decision["risk_flags"],
         "ai_analysis": decision["ai_analysis"],
-        "workflow_action": decision["suggested_action"],
-        "next_step": decision["next_step"],
         "human_intervention_required": decision["human_intervention_required"],
         "complexity_reasons": decision["complexity_reasons"],
         "agent_action_status": action_result["status"],
         "agent_action_result": action_result["message"],
         "escalation_queue": action_result["queue"],
+        "appeal_letter": decision["appeal_letter"],
         "processed_at": decision["processed_at"],
     }
