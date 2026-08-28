@@ -1,152 +1,87 @@
-# AI Claim Denial Agent
+# Claim Denial AI Agent
 
-## Problem
+This project takes a denied health insurance claim and figures out what to do next — automatically.
 
-Insurance claim denials come with a free-text reason ("Out of network provider",
-"Prior authorization missing", etc.) written by whoever processed the claim. Turning
-that text into a concrete next action - request a document, flag for fraud review,
-check for a duplicate, or draft an appeal - is normally a manual triage step. This
-project automates that triage: it reads the denial reason, classifies it against
-real insurance billing codes, and either takes an automated action or routes the
-claim to the right human queue.
+Instead of a person reading every denial reason and deciding what happens next, this project uses a local AI model to read the reason, understand what it actually means, and pick the right next step: ask for a missing document, send it to a fraud team, check for a duplicate claim, or write an appeal letter.
 
-## How the agent actually decides what to do
+## Why this project exists
 
-The denial reason text is sent to a **local llama3 model running through Ollama**.
-The model reads the text and classifies it into one of 13 CARC-coded categories -
-this is a real inference call, not a hardcoded `if "fraud" in reason` check. That
-classification then drives two things, both looked up from fixed tables in code
-(not decided by the model, so the model can never call an action it wasn't given):
+When an insurance claim gets denied, someone has to read the reason and decide what to do about it. That's slow and repetitive. This project automates that first decision using AI, while still sending the tricky or high-risk cases to a real person.
 
-1. A **CARC (Claim Adjustment Reason Code)** label + description - see
-   [`carc_codes.py`](carc_codes.py) for the 13 codes used and why each was chosen.
-2. Which of four **tools** actually runs:
+## How it actually works
 
-   | Tool | Used for |
-   |---|---|
-   | `request_missing_document` | Missing ID/KYC proof or incomplete medical documentation |
-   | `escalate_to_fraud_review` | Fraud, forged/tampered documents, suspicious activity |
-   | `check_duplicate_claim` | Claim looks like a repeat/duplicate submission |
-   | `draft_appeal_letter` | Everything else appealable - coverage disputes, medical necessity, coding errors, prior auth, timely filing, network issues, benefit limits, data mismatches, coordination of benefits |
+1. You give the app a claim ID.
+2. The app sends the claim's denial reason (plain text) to a local AI model (Llama 3, running through Ollama on your own computer — no paid API, no internet needed for the AI part).
+3. The AI model reads the text and decides, on its own, which category the denial falls into. This is real understanding, not simple word-matching — the code never just checks if a specific word like "fraud" appears in the text.
+4. That category is matched to a real insurance code (a CARC code — the actual code type used on real insurance paperwork) and to one of four actions the app can take.
+5. The app runs that action — for example, it writes a real appeal letter using AI and saves it, or creates a fraud escalation ticket.
 
-**Why a category → tool lookup table instead of asking the model to name a tool
-directly:** base `llama3` (unlike `llama3.1+`) doesn't support Ollama's native
-function/tool-calling API - see [Limitations](#limitations-and-honest-caveats).
-So the model returns structured JSON (`{"reasoning": ..., "category": ...}`), and
-Python dispatches from there. Routing tool selection through a fixed category
-table (rather than having the model output a raw tool name) also means the model
-can never call a tool that doesn't exist, while the actual classification
-decision - the hard part - is still 100% the model's own reasoning over the text.
+## The four actions the agent can take
 
-`draft_appeal_letter` makes a second LLM call to write an actual 2-3 paragraph
-appeal letter referencing the claim ID, patient, amount, and CARC code, then
-saves it to `appeals/<claim_id>.json`.
+- **Ask for a missing document** — when the claim is missing an ID document or medical paperwork.
+- **Send to fraud review** — when the reason points to fraud, forgery, or suspicious activity.
+- **Check for a duplicate claim** — actually looks through the other claims in the system to see if this one was already submitted before.
+- **Write an appeal letter** — for anything that could reasonably be appealed (wrong billing code, missing prior authorization, policy disputes, and more). The AI writes a real 2-3 paragraph letter and saves it as a file.
 
-```mermaid
-flowchart TD
-    A[Denial reason text] --> B[llama3 via Ollama\nclassify_denial_reason]
-    B --> C{category}
-    C -->|missing_identity_proof\nincomplete_documentation| D[request_missing_document]
-    C -->|fraud_risk| E[escalate_to_fraud_review]
-    C -->|duplicate_submission| F[check_duplicate_claim\nscans claims.csv for a match]
-    C -->|9 other appealable categories| G[draft_appeal_letter\nsecond llama3 call writes the letter]
-    C --> H[carc_codes.py lookup\nCARC code + description]
-    G --> I[appeals/claim_id.json]
-    D --> J[JSON response]
-    E --> J
-    F --> J
-    G --> J
-    H --> J
-```
+## What makes this a real AI agent, not just a script
 
-## Architecture
+A lot of projects like this fake the "AI" part with simple rules like "if the text contains the word X, do Y." This project doesn't do that. The AI model itself reads and understands the denial reason and decides the category — that decision is what drives everything else. You can test this by giving it a denial reason worded completely differently from the examples it was shown, and it still classifies it correctly, because it's reasoning about the meaning, not matching exact words.
+
+## Project structure
 
 ```
-frontend/ (static HTML/CSS/JS)
-     |  fetch('/analyze-claim/:id')
-     v
-app.py (FastAPI)  ------  main.py (CLI, same pipeline, no server)
-     |
-     +--> claim_store.py   (loads + validates claims.csv, shared by app.py and main.py)
-     +--> claim_agent.py   (LLM classification, tool dispatch, appeal letter generation)
-     |         |
-     |         +--> carc_codes.py   (13-code CARC reference table)
-     |         +--> ChatOllama (langchain-ollama) --> local Ollama server --> llama3
-     +--> appeals/<claim_id>.json  (persisted appeal letters)
-     +--> agent_logs.txt  (append-only action log)
+app.py            - the web server (FastAPI) that exposes the agent over HTTP
+claim_agent.py     - the actual AI agent: classifies denials and runs the four actions
+carc_codes.py      - the real insurance denial codes used in this project
+claim_store.py     - loads and validates claim data from the CSV file
+main.py            - a simple command-line version, for testing without the web server
+claims.csv         - sample claim data
+frontend/          - the web page you use to look up a claim and see the result
+tests/             - automated tests for the agent's logic
 ```
 
-One FastAPI service, no database, no auth, no microservices - small enough for one
-person to run and explain end to end.
+## Running it yourself
 
-## Setup
+You'll need:
 
-**Prerequisite: Ollama must be running locally with the `llama3` model pulled.**
+- Python 3.10 or newer
+- [Ollama](https://ollama.com) installed and running on your machine
+- The Llama 3 model pulled once: `ollama pull llama3`
+
+Steps:
 
 ```bash
-ollama pull llama3
-ollama serve          # if it isn't already running as a background service
-```
-
-Then:
-
-```bash
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Mac/Linux
-
+git clone https://github.com/manavibangani/Claim_Denial_Agent.git
+cd Claim_Denial_Agent
 pip install -r requirements.txt
-
 uvicorn app:app --reload
 ```
 
-Open `frontend/index.html` in a browser (or serve it with any static file server),
-enter a claim ID from `claims.csv` (e.g. `CLM104`), and click Analyze.
+Then open `frontend/index.html` in your browser, type in a claim ID from `claims.csv` (like `CLM101`), and click "Analyze Claim."
 
-To run the same logic from the terminal instead of the API:
+To try it from the command line instead of the browser:
 
 ```bash
 python main.py
 ```
 
-### Running tests
+## Running the tests
 
 ```bash
 pytest
 ```
 
-Most tests call the real llama3 model (there's no mocked LLM - the whole point is
-to prove the routing decision is genuinely model-driven) and will be skipped
-automatically if Ollama isn't reachable. A few tests deliberately use paraphrased,
-reworded denial reasons that share no keywords with the original wording, to
-confirm the model is reasoning about meaning rather than matching strings.
+The tests check that the agent picks the right action for different kinds of denial reasons, including reasons worded differently from the training examples, to prove it's really understanding the text and not just matching keywords.
 
-## API
+## Being honest about the limits
 
-| Endpoint | Description |
-|---|---|
-| `GET /claims` | List all claims from `claims.csv` |
-| `GET /capabilities` | The 13 CARC categories, their codes, and which tool each maps to |
-| `GET /analyze-claim/{claim_id}` | Run the full pipeline for one claim |
+- This uses a small set of 13 real insurance codes, not the full official list of around 200 — enough to cover realistic cases without turning this into a huge reference table.
+- There isn't an official insurance code specifically for "fraud" in real life either — real insurers route fraud cases to a separate investigation team instead of putting a fraud code on paperwork. This project does the same thing and uses a generic code with a note explaining why.
+- The AI model runs locally through Ollama, so there's no live hosted demo link — you need Ollama running on your own machine to try it.
 
-Example `/analyze-claim/{id}` response fields: `decision_category`, `carc_code`,
-`carc_description`, `tool_used`, `llm_reasoning`, `priority_level`,
-`human_intervention_required`, `agent_action_result`, `escalation_queue`,
-`appeal_letter` (present when `draft_appeal_letter` ran).
+## Tech used
 
-## Limitations and honest caveats
-
-- **No native tool-calling.** `llama3` doesn't support Ollama's function-calling
-  API (only newer models like `llama3.1+` do), so this uses the documented
-  fallback of structured JSON output + Python-side dispatch instead of
-  `.bind_tools()`. The reasoning is still the model's own.
-- **No official CARC code for fraud.** Real payers route fraud suspicion to a
-  Special Investigations Unit rather than printing a fraud-specific code on a
-  member-facing EOB. `CO-A1` (a generic denial header code) is used as the
-  closest honest fit - see the comment in `carc_codes.py`.
-- **CPU inference is slow.** Each classification call takes several seconds on a
-  CPU-only Ollama setup; the appeal-letter path makes a second LLM call on top of
-  that.
-- **13 CARC codes, not the full official list.** X12 publishes hundreds of CARC
-  codes; this project maps a deliberately small subset to the categories it
-  actually handles.
+- Python, FastAPI (the web server)
+- LangChain + Ollama (running Llama 3 locally) for the actual AI reasoning
+- Plain HTML/CSS/JS for the front-end page
+- Pytest for automated tests
