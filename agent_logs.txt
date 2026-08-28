@@ -8,3 +8,7 @@
 [2026-05-20 23:40:23] Claim CLM104 processed | Category: Fraud Risk | Action: Escalate to Fraud Investigation Team | Human review: True
 [2026-05-21 19:04:12] Claim CLM104 processed | Category: Fraud Risk | Action: Escalate to Fraud Investigation Team | Human review: True
 [2026-08-28 18:37:48] Claim CLM111 processed | Category: Provider Network Issue | CARC: CO-109 | Tool: draft_appeal_letter | Human review: True
+[2026-08-28 19:13:31] Claim CLM104 processed | Category: Fraud Risk | CARC: CO-A1 | Tool: escalate_to_fraud_review | Human review: True
+[2026-08-28 19:15:55] Claim CLM104 processed | Category: Fraud Risk | CARC: CO-A1 | Tool: escalate_to_fraud_review | Human review: True
+[2026-08-28 19:16:48] Claim CLM105 processed | Category: Duplicate Submission | CARC: CO-18 | Tool: check_duplicate_claim | Human review: False
+[2026-08-28 19:18:38] Claim CLM102 processed | Category: Coverage Ineligible | CARC: CO-27 | Tool: draft_appeal_letter | Human review: False
